@@ -7,8 +7,6 @@ from calculateMatrix import construct_matrix_maybefast
 from calculateMatrix import construct_matrix_faster
 from calculateMatrix import construct_matrix_maybefast_tiny
 from calculateMatrix import construct_matrix_maybefast_tiny2
-from calculateMatrix import construct_matrix_faster2
-from calculateMatrix import construct_matrix_faster3
 from solver import rayleigh_solve
 from lambda_finder import calc_lambda
 from lambda_finder import calc_qbar_plate
@@ -23,7 +21,6 @@ import time
 from scipy import linalg as la
 import numpy as np
 import matplotlib.pyplot as plt
-import cProfile
 
 
 #beam1 = Beam(1, 70E9, 2700, 0.1, 0.1, 'PP', 10)

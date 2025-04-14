@@ -3,6 +3,8 @@ from calculateMatrix import construct_matrix_maybefast_tiny
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+# test
+
 def calc_lambda(roots, constraints, beam, plate):
 
     lambda_matrix = np.zeros((len(constraints), len(roots)))
