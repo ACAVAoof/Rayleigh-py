@@ -1,3 +1,7 @@
+#After having found frequencies for determinant to be 0, take frequency and put back into problem to calculate mode shape using lambda constraint matrix
+#From lambda matrix, calculate q-bar, then mode shape vectors
+#Also has plotting features
+
 import numpy as np
 from calculateMatrix import construct_matrix_maybefast_tiny
 import matplotlib.pyplot as plt

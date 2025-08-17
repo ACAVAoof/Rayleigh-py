@@ -1,6 +1,8 @@
+#Sets up parameters for beam and plate classes with dimensions and properties
+
 import numpy as np
 
-
+#Setting up beam class with length, elasticity, density, height, width, boundary conditions, and number of modes
 class Beam:
 
     def __init__(self, L, E, den, h, w, BC, indx):
@@ -14,14 +16,10 @@ class Beam:
         self.indx = indx
 
         self.m = self.den * self.h * self.w ##mass per unit length
-
         self.I = self.w * self.h**3 / 12 ##moment of area
-
-        
 
         if self.BC == 'PP':
             self.gen_mass = self.L * self.m / 2
-
         else:
             print('An error occurred, unknown BC Beam condition.')
             raise Exception('An error occurred, unknown BC Beam condition.')
@@ -29,10 +27,7 @@ class Beam:
         self.freqs = self.calc_first_freqs(self.indx)
         self.freqs_sq = self.freqs**2
         self.freqs_sq_mass = self.freqs**2 * self.gen_mass
-
         self.freq_prefactor = np.sqrt(self.E * self.I / self.m) * np.pi**2 / self.L**2
-
-        
 
     def shape(self, n, x):
         if self.BC == 'PP':
@@ -46,12 +41,10 @@ class Beam:
         freqs = np.zeros((indx))
         for n in range(1, indx+1):
             freqs[n-1] = self.freq(n)
-
         return freqs
 
     def constraint_shapes(self, constraints):
-        shapes = np.zeros( ( self.indx, len(constraints) ) ) 
-                          
+        shapes = np.zeros( ( self.indx, len(constraints) ) )              
 
         for n in range(1, self.indx+1):
             for indx, constraint in enumerate(constraints):
@@ -68,11 +61,10 @@ class Beam:
         #print(constraint_block)
         return constraint_block
 
-
+#Setting up plate class with length, width, elasticity, density, height, boundary conditions, and number of modes
 class Plate:
 
     def __init__(self, a, b, E, den, h, nu, BC, x_indx, y_indx):
-
         self.a = a ##length of the plate in the x direction
         self.b = b ##length of the plate in the y direction
         self.E = E
@@ -82,10 +74,8 @@ class Plate:
         self.x_indx = x_indx
         self.y_indx = y_indx
 
-        self.m = self.den * self.h ##mass per unit area
-
-        self.D = E * h**3 / ( 12 * (1 - nu**2) )
-
+        self.m = self.den * self.h #mass per unit area
+        self.D = E * h**3 / ( 12 * (1 - nu**2) ) #flexural rigidity
         self.freq_prefactor = self.D * np.pi**4 / self.m
 
         if self.BC == 'PPPP':
@@ -102,18 +92,15 @@ class Plate:
         if self.BC == 'PPPP':
             return np.sin( rx * np.pi * position[0] / self.a) * np.sin( ry * np.pi * position[1] / self.b )
 
-
     def freq(self, rx, ry):
         return np.sqrt(self.D /self.m) * ( (rx * np.pi / self.a)**2 + (ry * np.pi / self.b)**2 )
 
     def calc_first_freqs(self, x_indx, y_indx):
-        
         freqs = np.zeros( (x_indx, y_indx) )
         
         for rx in range(1, x_indx + 1):
             for ry in range(1, y_indx + 1):
                 freqs[rx-1, ry-1] = self.freq(rx, ry)
-
         return freqs
 
     def constraint_shapes(self, constraints):
@@ -125,6 +112,5 @@ class Plate:
 
                     shapes[rx-1, ry-1, indx] = self.shape(rx, ry, constraint)
         return shapes
-                
-        
-            
+
+

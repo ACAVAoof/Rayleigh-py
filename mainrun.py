@@ -1,3 +1,5 @@
+#Ties all processes together
+
 from calculateMatrix import construct_matrix
 from solver import sym_transform
 from calculateMatrix import construct_matrix_med
@@ -79,7 +81,6 @@ for indx, freq in enumerate(freq_range):
         dets[indx] = np.linalg.det(A)
 
 plt.plot(freq_range, dets)
-
 plt.show()
 
 flag = True

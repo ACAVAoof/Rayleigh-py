@@ -1,0 +1,12 @@
+Notes
+
+8/17/2025
+    - Comments and cleanup
+    - Implement fixed (clamped) boundary conditions
+    - Arbitrary numerical precision (research floating point precision)
+        - 0.3 + 0.4 vs 0.2 + 0.4
+        - Change python to use a set number of decimal points rather than bits, increases memory required
+        - External libraries mp math or gmpy2
+    - Optimize calculateMatrix.py (file that gets called the most)
+
+    - structs -> calculateMatrix -> solver -> lambda_finder

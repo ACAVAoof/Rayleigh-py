@@ -1,3 +1,6 @@
+#Solves determinant problem from calculateMatrix by sweeping through frequencies for beam and plate to find combination for determinant to be 0
+#Uses different solving methods (monkey bisection, asymmetric, etc)
+
 from calculateMatrix import construct_matrix_maybefast_tiny
 import numpy as np
 

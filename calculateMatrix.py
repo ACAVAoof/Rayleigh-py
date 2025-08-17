@@ -1,13 +1,17 @@
+#Creates matrix with coupled beam and plate whose determinant will be varied and solved to be 0
+#Different methods in optimizing speed
+
 import numpy as np
 
 def construct_matrix(freq, constraints, beam, plate):
+    
     dim = len(constraints)
-
     A = np.zeros((dim, dim))
 
     for row_indx in range(dim):
+        
         for col_indx in range(row_indx, dim):
-
+            
             left = 0
             # Beam calculations
             for n in range(1, beam.indx+1):
@@ -27,11 +31,10 @@ def construct_matrix(freq, constraints, beam, plate):
             A[col_indx, row_indx] = left + right  # Matrix is symmetric
 
     return A
-
             
 def construct_matrix_med(freq, constraints, beam, plate):
+    
     dim = len(constraints)
-
     A = np.zeros((dim, dim))
 
     beam_freq_diff_sq = beam.gen_mass * ((-freq**2) + beam.freqs**2 ) # This is a vector for each frequency
