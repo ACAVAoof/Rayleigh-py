@@ -56,10 +56,10 @@ def calc_modeshape_matrix(q_bar_plate_matrix, root_indx, plate, constraints, DIV
             for rx in range(plate.x_indx):
                 for ry in range(plate.y_indx):
                     my_sum += q_bar_plate_matrix[rx, ry, root_indx] * plate.shape(rx+1, ry+1, [x, y])
-
             out[inx, iny] = my_sum
 
     constraint_z = np.zeros((len(constraints) ) )
+    
     for cindx, constraint in enumerate(constraints):
         my_sum = 0
         for rx in range(plate.x_indx):
@@ -70,8 +70,8 @@ def calc_modeshape_matrix(q_bar_plate_matrix, root_indx, plate, constraints, DIV
 
 
 def heatmap_plot(out, X, Y, plate, constraints, constraint_z):
+    
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
     c = ax.plot_surface( X, Y, out, cmap = cm.coolwarm )
     ax.set_box_aspect((plate.a, plate.b, 1))
     for cindx, constraint in enumerate(constraints):
@@ -80,7 +80,3 @@ def heatmap_plot(out, X, Y, plate, constraints, constraint_z):
     plt.show()
         
 
-        
-        
-    
-        

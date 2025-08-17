@@ -27,7 +27,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
-
 #beam1 = Beam(1, 70E9, 2700, 0.1, 0.1, 'PP', 10)
 #plate1 = Plate(1, 2, 70E9, 2700, 0.1, .33, 'PPPP', 10, 10)
 
@@ -47,27 +46,17 @@ constraints = [[np.pi/4, np.pi/2], [np.pi/5, np.pi/2], [2*np.pi/5, np.pi/2], [np
 #constraints = [[0.4, 0.4], [0.3, 0.4], [0.2, 0.4]]
 #beam1.constraint_block = beam1.make_constraint_block(constraints)
 
-
 plate1.constraint_eval = plate1.constraint_shapes(constraints)
 beam1.constraint_eval = beam1.constraint_shapes(constraints)
-
 plate1.constraint_shape_matrix = plate1.constraint_shapes(constraints)
-
 dim = len(constraints)
-
-
-
 
 roots = rayleigh_solve(beam1, plate1, constraints, 300, 1E-9, 50, 1E-13, transform = True)
 print('ROOTS ARE', roots)
 
-
-
-
 freq_range = np.linspace(0, 800, 7000)
 dets = np.zeros((len(freq_range)))
 eigenvals_real = []
-
 
 trans = True
 
@@ -124,30 +113,14 @@ while flag == True:
             else:
                 dets[indx] = np.linalg.det(A)
 
-
-
-
-
-    
         plt.plot(freq_range, dets)
 
         plt.show()
 
-        
-
-        
-    
-
-
-
 lambda_matrix = calc_lambda(roots, constraints, beam1, plate1)
-
 qbar_plate = calc_qbar_plate(lambda_matrix,roots, plate1)
 
-
-
 #out, X, Y = calc_modeshape_matrix(qbar_plate, 0, plate1)
-
 
 for i in range(len(roots)):
     out, X, Y, constraint_z = calc_modeshape_matrix(qbar_plate, i, plate1, constraints)
@@ -155,16 +128,9 @@ for i in range(len(roots)):
 
 #heatmap_plot(X, Y, out)
 
-
-
-
-
-
-
 freq_range = np.linspace(0, 5000, 7000)
 dets = np.zeros((len(freq_range)))
 eigenvals_real = []
-
 
 trans = True
 
@@ -177,12 +143,8 @@ for indx, freq in enumerate(freq_range):
     else:
         dets[indx] = np.linalg.det(A)
 
-
-
-
-
-    
 plt.plot(freq_range, dets)
 
 plt.show()
+
 
