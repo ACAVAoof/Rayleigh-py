@@ -3,20 +3,24 @@ from calculateMatrix import construct_matrix_maybefast_tiny
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+
 def calc_lambda(roots, constraints, beam, plate):
 
     lambda_matrix = np.zeros((len(constraints), len(roots)))
     lambda_matrix[0, :] = 1
-    
+
     for indx, root in enumerate(roots):
-        matrix = construct_matrix_maybefast_tiny(root, len(constraints), beam, plate)
-        print(f'matrix @ root {root}', matrix)
+        matrix = construct_matrix_maybefast_tiny(
+            root, len(constraints), beam, plate
+        )
+        print(f"matrix @ root {root}", matrix)
         sub_matrix = matrix[1:, 1:]
         sub_vec = -matrix[1:, 0]
         lamb_vector = np.linalg.solve(sub_matrix, sub_vec)
         lambda_matrix[1:, indx] = lamb_vector
 
     return lambda_matrix
+
 
 def calc_qbar_plate(lambda_matrix, roots, plate):
 
@@ -27,22 +31,28 @@ def calc_qbar_plate(lambda_matrix, roots, plate):
         lamb_vec = lambda_matrix[:, indx]
         top = 0
         bottom = 0
-        
+
         for rx in range(plate.x_indx):
             for ry in range(plate.y_indx):
-                top = -np.dot( lamb_vec, plate.constraint_shape_matrix[rx, ry, :] )
-                bottom = plate.gen_mass * (-root**2 + plate.freqs[rx, ry]**2)
+                top = -np.dot(
+                    lamb_vec, plate.constraint_shape_matrix[rx, ry, :]
+                )
+                bottom = plate.gen_mass * (
+                    -(root**2) + plate.freqs[rx, ry] ** 2
+                )
                 matrix[rx, ry, indx] = top / bottom
 
     return matrix
 
 
-def calc_modeshape_matrix(q_bar_plate_matrix, root_indx, plate, constraints, DIVISIONS = 50):
+def calc_modeshape_matrix(
+    q_bar_plate_matrix, root_indx, plate, constraints, DIVISIONS=50
+):
 
     x_space = np.linspace(0, plate.a, DIVISIONS)
     y_space = np.linspace(0, plate.b, DIVISIONS)
 
-    X, Y = np.meshgrid(x_space, y_space, indexing = 'ij')
+    X, Y = np.meshgrid(x_space, y_space, indexing="ij")
 
     out = np.zeros((len(x_space), len(y_space)))
 
@@ -51,16 +61,20 @@ def calc_modeshape_matrix(q_bar_plate_matrix, root_indx, plate, constraints, DIV
             my_sum = 0
             for rx in range(plate.x_indx):
                 for ry in range(plate.y_indx):
-                    my_sum += q_bar_plate_matrix[rx, ry, root_indx] * plate.shape(rx+1, ry+1, [x, y])
+                    my_sum += q_bar_plate_matrix[
+                        rx, ry, root_indx
+                    ] * plate.shape(rx + 1, ry + 1, [x, y])
 
             out[inx, iny] = my_sum
 
-    constraint_z = np.zeros((len(constraints) ) )
+    constraint_z = np.zeros((len(constraints)))
     for cindx, constraint in enumerate(constraints):
         my_sum = 0
         for rx in range(plate.x_indx):
             for ry in range(plate.y_indx):
-                my_sum += q_bar_plate_matrix[rx, ry, root_indx] * plate.shape(rx+1, ry+1, constraint)
+                my_sum += q_bar_plate_matrix[rx, ry, root_indx] * plate.shape(
+                    rx + 1, ry + 1, constraint
+                )
         constraint_z[cindx] = my_sum
     return out, X, Y, constraint_z
 
@@ -68,15 +82,16 @@ def calc_modeshape_matrix(q_bar_plate_matrix, root_indx, plate, constraints, DIV
 def heatmap_plot(out, X, Y, plate, constraints, constraint_z):
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    c = ax.plot_surface( X, Y, out, cmap = cm.coolwarm )
+    c = ax.plot_surface(X, Y, out, cmap=cm.coolwarm)
     ax.set_box_aspect((plate.a, plate.b, 1))
     for cindx, constraint in enumerate(constraints):
         ##calculate the deflection
-        ax.scatter(constraint[0], constraint[1], constraint_z[cindx] - .5, color = 'black', s = 35, marker  = 'o')
+        ax.scatter(
+            constraint[0],
+            constraint[1],
+            constraint_z[cindx] - 0.5,
+            color="black",
+            s=35,
+            marker="o",
+        )
     plt.show()
-        
-
-        
-        
-    
-        
