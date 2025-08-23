@@ -16,11 +16,6 @@ def test_gen_mass(beam):
     print(beam.gen_mass)
     assert np.isclose(beam.gen_mass, 27.0, atol=1e-8)
 
-    # Test with invalid boundary condition
-
-    beam.__dict__.pop("gen_mass", None)  # Clear cached property
-    beam.boundary_condition = "CC"
-
 
 def test_freq(beam, modal_indx=2):
     """Test the frequency calculation of the beam."""
@@ -37,9 +32,6 @@ def test_freqs(beam):
             atol=1e-4,
         )
     )
-
-    beam.__dict__.pop("freqs", None)  # Clear cached property
-    beam.boundary_condition = "CC"
 
 
 def test_freqs_sq(beam):
@@ -73,3 +65,12 @@ def test_shape(beam, x=0.5, modal_indx=2):
     """Test the shape function of the beam."""
     shape_value = beam.shape(modal_indx, x)
     assert np.isclose(shape_value, 0.0, atol=1e-8)
+
+
+def test_constraint_shapes(beam, constraints):
+    """Test the constraint shapes calculation of the beam."""
+    constraint_shapes = beam.constraint_shapes(constraints)
+    expected_shapes = np.array(
+        [[1.0, 0.951056516295], [0.0, 0.587785252292], [-1.0, -0.587785252292]]
+    )
+    assert np.all(np.isclose(constraint_shapes, expected_shapes, atol=1e-8))

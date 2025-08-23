@@ -48,7 +48,8 @@ class Beam:
         # Validate boundary condition
         if self.boundary_condition not in valid_beam_boundary_conditions:
             raise ValueError(
-                f"Invalid boundary condition '{self.boundary_condition}' for Beam. "
+                f"""Invalid boundary condition '{self.boundary_condition}'
+                for Beam."""
                 f"Valid options are: {valid_beam_boundary_conditions}"
             )
 
@@ -92,7 +93,7 @@ class Beam:
 
     @cached_property
     def freq_prefactor(self) -> float:
-        """Calculate the frequency prefactor for the beam.
+        """🐍Calculate the frequency prefactor for the beam.
         Units of s^-1 * m^(-1/2)."""
         return (
             np.sqrt(self.e_modulus * self.area_moment / self.gen_mass)
@@ -128,7 +129,7 @@ class Beam:
             )
 
     def constraint_shapes(self, constraints: np.ndarray) -> np.ndarray:
-        """Calculate the constraint shapes for the beam.
+        """🐍Calculate the constraint shapes for the beam.
 
         Args:
             constraints (n x 2): array of constraints where each row is a
@@ -136,13 +137,13 @@ class Beam:
 
         Returns:
             shapes (n x m): array of shape functions evaluated at the
-            constraints. Each row corresponds to a modal index and each column
+            constraints. Each row corresponds to a mode and each column
             corresponds to a constraint.
         """
 
-        shapes = np.zeros((self.indx, len(constraints)))
+        shapes = np.zeros((self.modal_indx, len(constraints)))
 
-        for n in range(1, self.indx + 1):
+        for n in range(1, self.modal_indx + 1):
             for indx, constraint in enumerate(constraints):
                 shapes[n - 1][indx] = self.shape(n, constraint[0])
         return shapes
@@ -168,12 +169,12 @@ class Plate:
 
     def __init__(
         self,
-        a_length,
-        b_length,
+        x_length,
+        y_length,
         e_modulus,
         density,
         thickness,
-        nu,
+        poisson_ratio,
         boundary_condition,
         x_modal_indx,
         y_modal_indx,
@@ -181,12 +182,12 @@ class Plate:
         """Initializer of the class to set up the plate properties.
 
         Args:
-            a_length (float): length of the plate in the x direction
-            b_length (float): length of the plate in the y direction
+            x_length (float): length of the plate in the x direction
+            y_length (float): length of the plate in the y direction
             e_modulus (float): elastic modulus of the plate in N/m
             density (float): density of the plate in kg/m^3
             thickness (float): thickness of the plate in m
-            nu (float): Poisson's ratio of the plate
+            possion_ratio (float): Poisson's ratio of the plate
             boundary_condition (string): boundary condition
             x_modal_indx (float): number of modes in the x direction
             y_modal_indx (float): number of modes in the y direction
@@ -197,12 +198,12 @@ class Plate:
         Raises:
             Exception: If an unknown boundary condition is provided.
         """
-        self.a_length = a_length
-        self.b_length = b_length
+        self.x_length = x_length
+        self.y_length = y_length
         self.e_modulus = e_modulus
         self.density = density
         self.thickness = thickness
-        self.nu = nu
+        self.poisson_ratio = poisson_ratio
         self.boundary_condition = boundary_condition
         self.x_modal_indx = x_modal_indx
         self.y_modal_indx = y_modal_indx
@@ -217,12 +218,16 @@ class Plate:
     @cached_property
     def mass_per_unit_area(self):
         """Calculate the mass per unit area of the plate."""
-        return self.den * self.thickness
+        return self.density * self.thickness
 
     @cached_property
     def flexural_rigidity(self):
         """Calculate the flexural rigidity of the plate."""
-        return self.e_modulus * self.thickness**3 / (12 * (1 - self.nu**2))
+        return (
+            self.e_modulus
+            * self.thickness**3
+            / (12 * (1 - self.poisson_ratio**2))
+        )
 
     @cached_property
     def freq_prefactor(self):
@@ -233,11 +238,8 @@ class Plate:
     def gen_mass(self):
         """Calculate the generalized mass of the plate based on its
         boundary condition."""
-        if self.BC == "PPPP":
-            return self.mass_per_unit_area * self.a_length * self.b_length / 4
-        else:
-            print("An error occurred, unknown BC Plate condition.")
-            raise Exception("An error occurred, unknown BC Plate condition.")
+        if self.boundary_condition == "PPPP":
+            return self.mass_per_unit_area * self.x_length * self.y_length / 4
 
     @cached_property
     def freqs(self):
@@ -270,24 +272,26 @@ class Plate:
         Returns:
             float : The value of the shape function at the given position.
         """
-        if self.BC == "PPPP":
-            return np.sin(rx * np.pi * position[0] / self.a_length) * np.sin(
-                ry * np.pi * position[1] / self.b_length
+        if self.boundary_condition == "PPPP":
+            return np.sin(rx * np.pi * position[0] / self.x_length) * np.sin(
+                ry * np.pi * position[1] / self.y_length
             )
 
     def freq(self, rx, ry):
-        return np.sqrt(self.flexural_rigidity / self.generalized_mass) * (
-            (rx * np.pi / self.a_length) ** 2
-            + (ry * np.pi / self.b_length) ** 2
-        )
+        """Calculate the frequency of the plate for given modal indices. Units of rad/sec."""
+        if self.boundary_condition == "PPPP":
+            return np.sqrt(self.flexural_rigidity / self.gen_mass) * (
+                (rx * np.pi / self.x_length) ** 2
+                + (ry * np.pi / self.y_length) ** 2
+            )
 
     def constraint_shapes(self, constraints):
         shapes = np.zeros(
             (self.x_modal_indx, self.y_modal_indx, len(constraints))
         )
 
-        for rx in range(1, self.x_indx + 1):
-            for ry in range(1, self.y_indx + 1):
+        for rx in range(1, self.x_modal_indx + 1):
+            for ry in range(1, self.y_modal_indx + 1):
                 for indx, constraint in enumerate(constraints):
 
                     shapes[rx - 1, ry - 1, indx] = self.shape(

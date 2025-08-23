@@ -22,8 +22,8 @@ def plate():
     from rayleigh.structs import Plate
 
     return Plate(
-        a_length=1.0,
-        b_length=2.0,
+        x_length=1.0,
+        y_length=2.0,
         e_modulus=70e9,
         density=2700,
         thickness=0.01,
