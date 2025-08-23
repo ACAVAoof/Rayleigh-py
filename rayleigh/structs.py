@@ -1,5 +1,9 @@
 import numpy as np
 from functools import cached_property
+from rayleigh.constants import (
+    valid_beam_boundary_conditions,
+    valid_plate_boundary_conditions,
+)
 
 
 class Beam:
@@ -7,13 +11,13 @@ class Beam:
 
     def __init__(
         self,
-        length,
-        e_modulus,
-        thickness,
-        width,
-        density,
-        boundary_condition,
-        modal_indx,
+        length: float,
+        e_modulus: float,
+        thickness: float,
+        width: float,
+        density: float,
+        boundary_condition: str,
+        modal_indx: int,
     ):
         """Initializer of the class to set up the beam properties.
 
@@ -25,6 +29,7 @@ class Beam:
             width (float): beam width in m
             boundary_condition (string): boundary condition
             modal_indx (float): number of modes requested for the beam
+            Note that the modal_indx is one based indexing!!!
 
         Returns:
             Implicitly returns the beam object with all its properties set.
@@ -40,60 +45,64 @@ class Beam:
         self.boundary_condition = boundary_condition
         self.modal_indx = modal_indx
 
+        # Validate boundary condition
+        if self.boundary_condition not in valid_beam_boundary_conditions:
+            raise ValueError(
+                f"Invalid boundary condition '{self.boundary_condition}' for Beam. "
+                f"Valid options are: {valid_beam_boundary_conditions}"
+            )
+
     # Here we calculate derived properties, cached properties allow us to
     # avoid recalculating them multiple times. We calculate once
     # then store the result.
 
     @cached_property
-    def mass_per_unit_length(self):
-        """Calculate the mass per unit length of the beam."""
+    def mass_per_unit_length(self) -> float:
+        """🐍Calculate the mass per unit length of the beam. Units of kg / m."""
         return self.density * self.thickness * self.width
 
     @cached_property
-    def area_moment(self):
-        """Calculate the area moment of inertia for the beam."""
+    def area_moment(self) -> float:
+        """🐍Calculate the area moment of inertia for the beam. Units of m^4."""
         return self.width * self.thickness**3 / 12
 
     @cached_property
-    def gen_mass(self):
-        """Calculate the generalized mass of the beam based on its
-        boundary condition."""
+    def gen_mass(self) -> float:
+        """🐍Calculate the generalized mass of the beam based on its
+        boundary condition. Units of kg."""
         if self.boundary_condition == "PP":
             return self.length * self.mass_per_unit_length / 2
-        else:
-            print("An error occurred, unknown BC Beam condition.")
-            raise ValueError("An error occurred, unknown BC Beam condition.")
 
     @cached_property
-    def freqs(self):
-        """Calculate the first indx modal frequencies of the beam."""
-        freqs = np.zeros_like(self.modal_indx)
-        for n in range(1, self.modal_indx + 1):
-            freqs[n - 1] = self.freq(n)
-        return freqs
+    def freqs(self) -> np.ndarray:
+        """🐍Calculate the first indx modal frequencies of the beam.
+        Units of rad/sec."""
+        return np.array([self.freq(n) for n in range(1, self.modal_indx + 1)])
 
     @cached_property
-    def freqs_sq(self):
-        """Calculate the square of the frequencies."""
+    def freqs_sq(self) -> np.ndarray:
+        """🐍Calculate the square of the frequencies. Units of rad^2/sec^2."""
         return self.freqs**2
 
     @cached_property
-    def freqs_sq_mass(self):
-        """Calculate the square of the frequencies multiplied by the
-        generalized mass."""
-        return self.freqs_sq() * self.gen_mass
+    def freqs_sq_mass(self) -> np.ndarray:
+        """🐍Calculate the square of the frequencies multiplied by the
+        generalized mass. Units of kg * rad^2/sec^2."""
+        return self.freqs_sq * self.gen_mass
 
     @cached_property
-    def freq_prefactor(self):
-        """Calculate the frequency prefactor for the beam."""
+    def freq_prefactor(self) -> float:
+        """Calculate the frequency prefactor for the beam.
+        Units of s^-1 * m^(-1/2)."""
         return (
             np.sqrt(self.e_modulus * self.area_moment / self.gen_mass)
             * np.pi**2
             / self.length**2
         )
 
-    def shape(self, modal_indx, x):
-        """Calculate the shape function for the beam at a given position.
+    def shape(self, modal_indx, x) -> float:
+        """🐍Calculate the shape function for the beam at a given position.
+        Units of m.
 
         Args:
             modal_indx (int): modal index of the beam
@@ -102,12 +111,13 @@ class Beam:
         Returns:
             float : The value of the shape function at the given position.
         """
-        if self.BC == "PP":
+        if self.boundary_condition == "PP":
             return np.sin(modal_indx * np.pi * x / self.length)
 
-    def freq(self, modal_indx):
-        """Calculate the frequency of the beam for a given modal index."""
-        if self.BC == "PP":
+    def freq(self, modal_indx: float) -> float:
+        """🐍Calculate the frequency of the beam for a given modal index.
+        Units of rad/sec."""
+        if self.boundary_condition == "PP":
             return (
                 np.sqrt(
                     self.e_modulus
@@ -117,7 +127,7 @@ class Beam:
                 * (modal_indx * np.pi / self.length) ** 2
             )
 
-    def constraint_shapes(self, constraints):
+    def constraint_shapes(self, constraints: np.ndarray) -> np.ndarray:
         """Calculate the constraint shapes for the beam.
 
         Args:
@@ -137,7 +147,7 @@ class Beam:
                 shapes[n - 1][indx] = self.shape(n, constraint[0])
         return shapes
 
-    def make_constraint_block(self, constraints):
+    def make_constraint_block(self, constraints) -> np.ndarray:
         constraint_block = np.zeros(
             (self.indx, len(constraints), len(constraints))
         )
@@ -197,56 +207,57 @@ class Plate:
         self.x_modal_indx = x_modal_indx
         self.y_modal_indx = y_modal_indx
 
-        @cached_property
-        def mass_per_unit_area(self):
-            """Calculate the mass per unit area of the plate."""
-            return self.den * self.thickness
-
-        @cached_property
-        def flexural_rigidity(self):
-            """Calculate the flexural rigidity of the plate."""
-            return self.e_modulus * self.thickness**3 / (12 * (1 - self.nu**2))
-
-        @cached_property
-        def freq_prefactor(self):
-            """Calculate the frequency prefactor for the plate."""
-            return (
-                self.flexural_rigidity * np.pi**4 / (self.mass_per_unit_area)
+        # Validate boundary condition
+        if self.boundary_condition not in valid_plate_boundary_conditions:
+            raise ValueError(
+                f"Invalid boundary condition '{self.boundary_condition}' for Plate. "
+                f"Valid options are: {valid_plate_boundary_conditions}"
             )
 
-        @cached_property
-        def gen_mass(self):
-            """Calculate the generalized mass of the plate based on its
-            boundary condition."""
-            if self.BC == "PPPP":
-                return (
-                    self.mass_per_unit_area * self.a_length * self.b_length / 4
-                )
-            else:
-                print("An error occurred, unknown BC Plate condition.")
-                raise Exception(
-                    "An error occurred, unknown BC Plate condition."
-                )
+    @cached_property
+    def mass_per_unit_area(self):
+        """Calculate the mass per unit area of the plate."""
+        return self.den * self.thickness
 
-        @cached_property
-        def freqs(self):
-            """Calculate the first modal frequencies of the plate."""
-            freqs = np.zeros((self.x_modal_indx, self.y_modal_indx))
-            for rx in range(1, self.x_modal_indx + 1):
-                for ry in range(1, self.y_modal_indx + 1):
-                    freqs[rx - 1, ry - 1] = self.freq(rx, ry)
-            return freqs
+    @cached_property
+    def flexural_rigidity(self):
+        """Calculate the flexural rigidity of the plate."""
+        return self.e_modulus * self.thickness**3 / (12 * (1 - self.nu**2))
 
-        @cached_property
-        def freqs_sq(self):
-            """Calculate the square of the frequencies."""
-            return self.freqs**2
+    @cached_property
+    def freq_prefactor(self):
+        """Calculate the frequency prefactor for the plate."""
+        return self.flexural_rigidity * np.pi**4 / (self.mass_per_unit_area)
 
-        @cached_property
-        def freqs_sq_mass(self):
-            """Calculate the square of the frequencies multiplied by the
-            generalized mass."""
-            return self.freqs_sq * self.gen_mass
+    @cached_property
+    def gen_mass(self):
+        """Calculate the generalized mass of the plate based on its
+        boundary condition."""
+        if self.BC == "PPPP":
+            return self.mass_per_unit_area * self.a_length * self.b_length / 4
+        else:
+            print("An error occurred, unknown BC Plate condition.")
+            raise Exception("An error occurred, unknown BC Plate condition.")
+
+    @cached_property
+    def freqs(self):
+        """Calculate the first modal frequencies of the plate."""
+        freqs = np.zeros((self.x_modal_indx, self.y_modal_indx))
+        for rx in range(1, self.x_modal_indx + 1):
+            for ry in range(1, self.y_modal_indx + 1):
+                freqs[rx - 1, ry - 1] = self.freq(rx, ry)
+        return freqs
+
+    @cached_property
+    def freqs_sq(self):
+        """Calculate the square of the frequencies."""
+        return self.freqs**2
+
+    @cached_property
+    def freqs_sq_mass(self):
+        """Calculate the square of the frequencies multiplied by the
+        generalized mass."""
+        return self.freqs_sq * self.gen_mass
 
     def shape(self, rx, ry, position):
         """Calculate the shape function for the plate at a given position.
