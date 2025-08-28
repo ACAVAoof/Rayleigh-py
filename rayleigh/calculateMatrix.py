@@ -1,3 +1,6 @@
+#Creates matrix with coupled beam and plate whose determinant will be varied and solved to be 0
+#Different methods in optimizing speed
+
 import numpy as np
 
 
