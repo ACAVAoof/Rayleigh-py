@@ -1,9 +1,11 @@
 import numpy as np
+from scipy.integrate import quad
 from functools import cached_property
 from rayleigh.constants import (
     valid_beam_boundary_conditions,
     valid_plate_boundary_conditions,
 )
+from clamped_solver import betaL_roots
 
 
 class Beam:
@@ -68,11 +70,14 @@ class Beam:
         return self.width * self.thickness**3 / 12
 
     @cached_property
-    def gen_mass(self) -> float:
+    def gen_mass(self, modal_indx, x) -> float:
         """🐍Calculate the generalized mass of the beam based on its
         boundary condition. Units of kg."""
         if self.boundary_condition == "PP":
             return self.length * self.mass_per_unit_length / 2
+        if self.boundary_condition == "CC":
+            I = quad(self.psi(modal_indx, x) ** 2, 0.0, 1.0)
+            return self.mass_per_unit_length * self.length * I
 
     @cached_property
     def freqs(self) -> np.ndarray:
@@ -100,7 +105,9 @@ class Beam:
             * np.pi**2
             / self.length**2
         )
-
+    def psi(self, modal_indx, x):
+                return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))
+                
     def shape(self, modal_indx, x) -> float:
         """🐍Calculate the shape function for the beam at a given position.
         Units of m.
@@ -112,8 +119,13 @@ class Beam:
         Returns:
             float : The value of the shape function at the given position.
         """
+
         if self.boundary_condition == "PP":
             return np.sin(modal_indx * np.pi * x / self.length)
+        if self.boundary_condition == "CC":
+            grid = np.linspace(0, self.length, 4001)
+            A = np.max(np.abs(self.psi(modal_indx, grid)))
+            return (self.psi(modal_indx, x) / A)
 
     def freq(self, modal_indx: float) -> float:
         """🐍Calculate the frequency of the beam for a given modal index.
@@ -126,6 +138,15 @@ class Beam:
                     / self.mass_per_unit_length
                 )
                 * (modal_indx * np.pi / self.length) ** 2
+            )
+        if self.boundary_condition == "CC":
+            return (
+                np.sqrt(
+                    self.e_modulus
+                    * self.area_moment
+                    / self.mass_per_unit_length
+                )
+                * ( (betaL_roots[modal_indx] ** 2) / (self.length ** 2) )
             )
 
     def constraint_shapes(self, constraints: np.ndarray) -> np.ndarray:
@@ -234,6 +255,8 @@ class Plate:
         """Calculate the frequency prefactor for the plate."""
         return self.flexural_rigidity * np.pi**4 / (self.mass_per_unit_area)
 
+    """NEED CLAMPED BOUNDARY CONDITIONS HERE"""
+
     @cached_property
     def gen_mass(self):
         """Calculate the generalized mass of the plate based on its
@@ -276,6 +299,10 @@ class Plate:
             return np.sin(rx * np.pi * position[0] / self.x_length) * np.sin(
                 ry * np.pi * position[1] / self.y_length
             )
+        if self.boundary_condition == "CCCC":
+            return (np.cos(2 * rx * np.pi * position[0] / self.x_length) - 1) * (np.cos(2 * ry * np.pi * position[0] / self.y_length) - 1)
+
+    """NEED CLAMPED BOUNDARY CONDITIONS HERE"""
 
     def freq(self, rx, ry):
         """Calculate the frequency of the plate for given modal indices. Units of rad/sec."""

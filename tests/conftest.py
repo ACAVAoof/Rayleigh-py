@@ -3,7 +3,7 @@ import pytest
 
 # Fixtures for structs tests
 @pytest.fixture
-def beam():
+def pinned_beam():
     from rayleigh.structs import Beam
 
     return Beam(
@@ -13,6 +13,21 @@ def beam():
         width=0.2,
         density=2700,
         boundary_condition="PP",
+        modal_indx=3,
+    )
+
+
+@pytest.fixture
+def clamped_beam():
+    from rayleigh.structs import Beam
+
+    return Beam(
+        length=1.0,
+        e_modulus=70e9,
+        thickness=0.1,
+        width=0.2,
+        density=2700,
+        boundary_condition="CC",
         modal_indx=3,
     )
 
