@@ -75,7 +75,7 @@ class Beam:
         boundary condition. Units of kg."""
         if self.boundary_condition == "PP":
             return self.length * self.mass_per_unit_length / 2
-        if self.boundary_condition == "CC":
+        elif self.boundary_condition == "CC":
             I = quad(self.psi(modal_indx, x) ** 2, 0.0, 1.0)
             return self.mass_per_unit_length * self.length * I
 
@@ -122,7 +122,7 @@ class Beam:
 
         if self.boundary_condition == "PP":
             return np.sin(modal_indx * np.pi * x / self.length)
-        if self.boundary_condition == "CC":
+        elif self.boundary_condition == "CC":
             grid = np.linspace(0, self.length, 4001)
             A = np.max(np.abs(self.psi(modal_indx, grid)))
             return (self.psi(modal_indx, x) / A)
@@ -139,7 +139,7 @@ class Beam:
                 )
                 * (modal_indx * np.pi / self.length) ** 2
             )
-        if self.boundary_condition == "CC":
+        elif self.boundary_condition == "CC":
             return (
                 np.sqrt(
                     self.e_modulus
@@ -299,8 +299,6 @@ class Plate:
             return np.sin(rx * np.pi * position[0] / self.x_length) * np.sin(
                 ry * np.pi * position[1] / self.y_length
             )
-        if self.boundary_condition == "CCCC":
-            return (np.cos(2 * rx * np.pi * position[0] / self.x_length) - 1) * (np.cos(2 * ry * np.pi * position[0] / self.y_length) - 1)
 
     """NEED CLAMPED BOUNDARY CONDITIONS HERE"""
 

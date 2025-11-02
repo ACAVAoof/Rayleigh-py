@@ -5,9 +5,10 @@ from scipy.optimize import brentq
 n_betaL_roots = 10
 f = lambda x: np.cosh(x)*np.cos(x) - 1.0
 
-xs = np.linspace(0.0, 100.0, 200_001)
-vals = f(xs)
-edges = np.flatnonzero(np.sign(vals[:-1]) * np.sign(vals[1:]) < 0)
+def calc_lambda(roots, constraints, beam, plate):
+    xs = np.linspace(0.0, 100.0, 200_001)
+    vals = f(xs)
+    edges = np.flatnonzero(np.sign(vals[:-1]) * np.sign(vals[1:]) < 0)
 
-betaL_roots = np.array([brentq(f, xs[i], xs[i+1]) for i in edges if xs[i+1] > 1e-12])[:n_betaL_roots]
-print(betaL_roots)
+    betaL_roots = np.array([brentq(f, xs[i], xs[i+1]) for i in edges if xs[i+1] > 1e-12])[:n_betaL_roots]
+    return betaL_roots
