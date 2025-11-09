@@ -255,14 +255,15 @@ class Plate:
         """Calculate the frequency prefactor for the plate."""
         return self.flexural_rigidity * np.pi**4 / (self.mass_per_unit_area)
 
-    """NEED CLAMPED BOUNDARY CONDITIONS HERE"""
-
     @cached_property
     def gen_mass(self):
         """Calculate the generalized mass of the plate based on its
         boundary condition."""
         if self.boundary_condition == "PPPP":
             return self.mass_per_unit_area * self.x_length * self.y_length / 4
+        elif self.boundary_condition == "CCCC":
+            I = quad(quad(self.shape** 2, 0.0, 1.0), 0.0, 1.0)
+            return self.mass_per_unit_area * self.x_length * self.y_length * I
 
     @cached_property
     def freqs(self):
@@ -284,7 +285,7 @@ class Plate:
         generalized mass."""
         return self.freqs_sq * self.gen_mass
 
-    def shape(self, rx, ry, position):
+    def shape(self, rx, ry, position, modal_indx):
         """Calculate the shape function for the plate at a given position.
 
         Args:
@@ -299,8 +300,12 @@ class Plate:
             return np.sin(rx * np.pi * position[0] / self.x_length) * np.sin(
                 ry * np.pi * position[1] / self.y_length
             )
-
-    """NEED CLAMPED BOUNDARY CONDITIONS HERE"""
+        elif self.boundary_condition == "CCCC":
+            grid = np.linspace(0, self.x_length, 4001)
+            A = np.max(np.abs(self.psi(modal_indx, grid)))
+            grid = np.linspace(0, self.y_length, 4001)
+            B = np.max(np.abs(self.psi(modal_indx, grid)))
+            return ( (self.psi(modal_indx, rx) / A) * ((self.psi(modal_indx, ry) / A)) )
 
     def freq(self, rx, ry):
         """Calculate the frequency of the plate for given modal indices. Units of rad/sec."""
@@ -309,6 +314,14 @@ class Plate:
                 (rx * np.pi / self.x_length) ** 2
                 + (ry * np.pi / self.y_length) ** 2
             )
+        elif self.boundary_condition == "CCCC":
+            D = ((self.e_modulus * self.thickness) / (12 * (1 - self.poisson_ratio**2)))
+            G = 1.506
+            H = 1.248
+            J = 1.248
+            aspect_ratio = self.x_length / self.y_length
+            C = ((np.pi**4) * D) / ((self.x_length**4) * self.mass_per_unit_area)
+            return (C * (G**4 + (G**4)*(aspect_ratio**4) + 2*(aspect_ratio**2)*(self.poisson_ratio * H * J + (1 - self.poisson_ratio) * H * J)))**0.5
 
     def constraint_shapes(self, constraints):
         shapes = np.zeros(
@@ -323,3 +336,6 @@ class Plate:
                         rx, ry, constraint
                     )
         return shapes
+
+    def psi(self, modal_indx, x):
+        return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))
