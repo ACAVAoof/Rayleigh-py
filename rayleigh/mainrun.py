@@ -36,12 +36,12 @@ plate1 = Plate(
     np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "PPPP", 15, 15
 )
 
-print("SYSTEM NUMBER", beam1.E * beam1.I / beam1.m * plate1.m / plate1.D)
-print("AR", plate1.b / plate1.a)
-print("MS", 2 * beam1.m / (plate1.m * plate1.b))
-print("DP", plate1.D)
-print("m_p", plate1.m)
-print("b", plate1.b)
+print("SYSTEM NUMBER", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
+print("AR", plate1.y_length / plate1.x_length)
+print("MS", 2 * beam1.mass_per_unit_length / (plate1.mass_per_unit_area * plate1.y_length))
+print("DP", plate1.flexural_rigidity)
+print("m_p", plate1.mass_per_unit_area)
+print("b", plate1.y_length)
 
 constraints = [
     [np.pi / 4, np.pi / 2],

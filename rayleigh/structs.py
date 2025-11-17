@@ -1,11 +1,11 @@
 import numpy as np
 from scipy.integrate import quad
 from functools import cached_property
-from rayleigh.constants import (
+from constants import (
     valid_beam_boundary_conditions,
     valid_plate_boundary_conditions,
 )
-from clamped_solver import betaL_roots
+from clampedSolver import betaL_roots
 
 
 class Beam:
@@ -333,7 +333,7 @@ class Plate:
                 for indx, constraint in enumerate(constraints):
 
                     shapes[rx - 1, ry - 1, indx] = self.shape(
-                        rx, ry, constraint
+                        rx, ry, constraint, indx
                     )
         return shapes
 
