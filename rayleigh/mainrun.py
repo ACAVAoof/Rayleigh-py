@@ -1,6 +1,3 @@
-#Ties all processes together
-
-#from calculateMatrix import construct_matrix
 from solver import sym_transform
 from solver import asym_solve
 from calculateMatrix import construct_matrix_maybefast_tiny
@@ -20,8 +17,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
-beam1 = Beam(np.sqrt(2), 0.001 * 70e9, 2700, 0.01, 0.01, "CC", 15)
-plate1 = Plate(np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "CCCC", 15, 15)
+beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.01, 0.01, "PP", 15)
+plate1 = Plate(np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "PPPP", 15, 15)
 
 print("SYSTEM NUMBER", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
 print("AR", plate1.y_length / plate1.x_length)
@@ -37,31 +34,20 @@ constraints = [
     [np.pi / 3, np.pi / 2],
     [np.pi / 6, np.pi / 2],
 ]
-# constraints = [[0.4, 0.7], [0.3, 0.7]]
-# constraints = [[0.4, 0.7], [0.3, 0.7 ]]
-# constraints = [[0.4, 0.4], [0.3, 0.4], [0.2, 0.4]]
-# beam1.constraint_block = beam1.make_constraint_block(constraints)
-
 
 plate1.constraint_eval = plate1.constraint_shapes(constraints)
 beam1.constraint_eval = beam1.constraint_shapes(constraints)
-
 plate1.constraint_shape_matrix = plate1.constraint_shapes(constraints)
-
 dim = len(constraints)
 
-
 roots = rayleigh_solve(
-    beam1, plate1, constraints, 3000000, 1e-9, 50, 1e-13, transform=True
+    beam1, plate1, constraints, 1000, 1e-9, 50, 1e-13, transform=True
 )
 print("ROOTS ARE", roots)
-
 
 freq_range = np.linspace(0, 800, 7000)
 dets = np.zeros((len(freq_range)))
 eigenvals_real = []
-
-
 trans = True
 
 for indx, freq in enumerate(freq_range):
