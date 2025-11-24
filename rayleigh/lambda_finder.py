@@ -41,7 +41,7 @@ def calc_qbar_plate(lambda_matrix, roots, plate):
                 top = -np.dot(
                     lamb_vec, plate.constraint_shape_matrix[rx, ry, :]
                 )
-                bottom = plate.gen_mass * (
+                bottom = plate.gen_mass(rx, ry) * (
                     -(root**2) + plate.freqs[rx, ry] ** 2
                 )
                 matrix[rx, ry, indx] = top / bottom
@@ -53,8 +53,8 @@ def calc_modeshape_matrix(
     q_bar_plate_matrix, root_indx, plate, constraints, DIVISIONS=50
 ):
 
-    x_space = np.linspace(0, plate.a, DIVISIONS)
-    y_space = np.linspace(0, plate.b, DIVISIONS)
+    x_space = np.linspace(0, plate.x_length, DIVISIONS)
+    y_space = np.linspace(0, plate.y_length, DIVISIONS)
 
     X, Y = np.meshgrid(x_space, y_space, indexing="ij")
 
@@ -67,7 +67,7 @@ def calc_modeshape_matrix(
                 for ry in range(plate.y_indx):
                     my_sum += q_bar_plate_matrix[
                         rx, ry, root_indx
-                    ] * plate.shape(rx + 1, ry + 1, [x, y])
+                    ] * plate.shape(rx + 1, ry + 1, x, y)
 
             out[inx, iny] = my_sum
 
@@ -77,7 +77,7 @@ def calc_modeshape_matrix(
         for rx in range(plate.x_indx):
             for ry in range(plate.y_indx):
                 my_sum += q_bar_plate_matrix[rx, ry, root_indx] * plate.shape(
-                    rx + 1, ry + 1, constraint
+                    rx + 1, ry + 1, constraint[0], constraint [1]
                 )
         constraint_z[cindx] = my_sum
     return out, X, Y, constraint_z
@@ -87,7 +87,7 @@ def heatmap_plot(out, X, Y, plate, constraints, constraint_z):
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
     c = ax.plot_surface(X, Y, out, cmap=cm.coolwarm)
-    ax.set_box_aspect((plate.a, plate.b, 1))
+    ax.set_box_aspect((plate.x_length, plate.y_length, 1))
     for cindx, constraint in enumerate(constraints):
         ##calculate the deflection
         ax.scatter(
