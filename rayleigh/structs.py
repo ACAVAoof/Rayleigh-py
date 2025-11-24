@@ -1,12 +1,13 @@
 import numpy as np
 from scipy.integrate import quad
+from scipy.integrate import dblquad
 from functools import cached_property
 from constants import (
     valid_beam_boundary_conditions,
     valid_plate_boundary_conditions,
 )
 from clampedSolver import betaL_roots
-
+import matplotlib.pyplot as plt
 
 class Beam:
     """Class that stores all structural information about a sample beam."""
@@ -60,6 +61,10 @@ class Beam:
     # then store the result.
 
     @cached_property
+    def indx(self) -> int:
+        return self.modal_indx
+
+    @cached_property
     def mass_per_unit_length(self) -> float:
         """🐍Calculate the mass per unit length of the beam. Units of kg / m."""
         return self.density * self.thickness * self.width
@@ -69,15 +74,18 @@ class Beam:
         """🐍Calculate the area moment of inertia for the beam. Units of m^4."""
         return self.width * self.thickness**3 / 12
 
-    @cached_property
-    def gen_mass(self, modal_indx, x) -> float:
+    def gen_mass(self, modal_indx) -> float:
         """🐍Calculate the generalized mass of the beam based on its
         boundary condition. Units of kg."""
         if self.boundary_condition == "PP":
             return self.length * self.mass_per_unit_length / 2
         elif self.boundary_condition == "CC":
-            I = quad(self.psi(modal_indx, x) ** 2, 0.0, 1.0)
-            return self.mass_per_unit_length * self.length * I
+            I, _ = quad(lambda x: self.psi_beam(modal_indx, x)**2, 0.0, self.length)
+            return self.mass_per_unit_length * I
+        
+    @cached_property
+    def gen_mass_vector_beam(self) -> float:
+        return np.array([self.gen_mass(n) for n in range(1, self.modal_indx + 1)])
 
     @cached_property
     def freqs(self) -> np.ndarray:
@@ -100,13 +108,12 @@ class Beam:
     def freq_prefactor(self) -> float:
         """🐍Calculate the frequency prefactor for the beam.
         Units of s^-1 * m^(-1/2)."""
-        return (
-            np.sqrt(self.e_modulus * self.area_moment / self.gen_mass)
+        return (np.sqrt(self.e_modulus * self.area_moment / self.gen_mass)
             * np.pi**2
-            / self.length**2
-        )
-    def psi(self, modal_indx, x):
-                return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))
+            / self.length**2)
+    
+    def psi_beam(self, modal_indx, x):
+        return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))
                 
     def shape(self, modal_indx, x) -> float:
         """🐍Calculate the shape function for the beam at a given position.
@@ -124,8 +131,8 @@ class Beam:
             return np.sin(modal_indx * np.pi * x / self.length)
         elif self.boundary_condition == "CC":
             grid = np.linspace(0, self.length, 4001)
-            A = np.max(np.abs(self.psi(modal_indx, grid)))
-            return (self.psi(modal_indx, x) / A)
+            A = np.max(np.abs(self.psi_beam(modal_indx, grid)))
+            return (self.psi_beam(modal_indx, x) / A)
 
     def freq(self, modal_indx: float) -> float:
         """🐍Calculate the frequency of the beam for a given modal index.
@@ -139,6 +146,7 @@ class Beam:
                 )
                 * (modal_indx * np.pi / self.length) ** 2
             )
+        
         elif self.boundary_condition == "CC":
             return (
                 np.sqrt(
@@ -176,14 +184,12 @@ class Beam:
 
         for row_indx in range(len(constraints)):
             for col_indx in range(len(constraints)):
-
                 constraint_block[:, row_indx, col_indx] = (
                     self.constraint_eval[:, row_indx]
                     * self.constraint_eval[:, col_indx]
                 )
 
         return constraint_block
-
 
 class Plate:
     """Class that stores all structural information about a sample plate."""
@@ -237,6 +243,14 @@ class Plate:
             )
 
     @cached_property
+    def x_indx(self) -> int:
+        return self.x_modal_indx
+    
+    @cached_property
+    def y_indx(self) -> int:
+        return self.y_modal_indx
+    
+    @cached_property
     def mass_per_unit_area(self):
         """Calculate the mass per unit area of the plate."""
         return self.density * self.thickness
@@ -255,15 +269,28 @@ class Plate:
         """Calculate the frequency prefactor for the plate."""
         return self.flexural_rigidity * np.pi**4 / (self.mass_per_unit_area)
 
-    @cached_property
-    def gen_mass(self):
+    def gen_mass(self, rx, ry):
         """Calculate the generalized mass of the plate based on its
         boundary condition."""
         if self.boundary_condition == "PPPP":
             return self.mass_per_unit_area * self.x_length * self.y_length / 4
         elif self.boundary_condition == "CCCC":
-            I = quad(quad(self.shape** 2, 0.0, 1.0), 0.0, 1.0)
-            return self.mass_per_unit_area * self.x_length * self.y_length * I
+            def integrand(y, x):
+                return self.shape(rx, ry, x, y)**2
+            I, _ = dblquad(
+                integrand,
+                0.0, self.y_length,
+                lambda y: 0.0,
+                lambda y: self.x_length)
+            return self.mass_per_unit_area * I
+
+    @cached_property
+    def gen_mass_vector_plate(self) -> float:
+        masses = np.zeros((self.x_modal_indx, self.y_modal_indx))
+        for rx in range(1, self.x_modal_indx + 1):
+            for ry in range(1, self.y_modal_indx + 1):
+                masses[rx - 1, ry - 1] = self.gen_mass(rx, ry)
+        return masses
 
     @cached_property
     def freqs(self):
@@ -285,7 +312,7 @@ class Plate:
         generalized mass."""
         return self.freqs_sq * self.gen_mass
 
-    def shape(self, rx, ry, position, modal_indx):
+    def shape(self, rx, ry, x, y):
         """Calculate the shape function for the plate at a given position.
 
         Args:
@@ -297,20 +324,20 @@ class Plate:
             float : The value of the shape function at the given position.
         """
         if self.boundary_condition == "PPPP":
-            return np.sin(rx * np.pi * position[0] / self.x_length) * np.sin(
-                ry * np.pi * position[1] / self.y_length
+            return np.sin(rx * np.pi * x / self.x_length) * np.sin(
+                ry * np.pi * y / self.y_length
             )
         elif self.boundary_condition == "CCCC":
             grid = np.linspace(0, self.x_length, 4001)
-            A = np.max(np.abs(self.psi(modal_indx, grid)))
+            A = np.max(np.abs(self.psi_plate(rx, grid)))
             grid = np.linspace(0, self.y_length, 4001)
-            B = np.max(np.abs(self.psi(modal_indx, grid)))
-            return ( (self.psi(modal_indx, rx) / A) * ((self.psi(modal_indx, ry) / A)) )
+            B = np.max(np.abs(self.psi_plate(ry, grid)))
+            return ( (self.psi_plate(rx, x) / A) * ((self.psi_plate(ry, y) / B)) )
 
     def freq(self, rx, ry):
         """Calculate the frequency of the plate for given modal indices. Units of rad/sec."""
         if self.boundary_condition == "PPPP":
-            return np.sqrt(self.flexural_rigidity / self.gen_mass) * (
+            return np.sqrt(self.flexural_rigidity / self.gen_mass(rx, ry)) * (
                 (rx * np.pi / self.x_length) ** 2
                 + (ry * np.pi / self.y_length) ** 2
             )
@@ -331,11 +358,8 @@ class Plate:
         for rx in range(1, self.x_modal_indx + 1):
             for ry in range(1, self.y_modal_indx + 1):
                 for indx, constraint in enumerate(constraints):
-
-                    shapes[rx - 1, ry - 1, indx] = self.shape(
-                        rx, ry, constraint, indx
-                    )
+                    shapes[rx - 1, ry - 1, indx] = self.shape(rx, ry, constraint[0], constraint[1])
         return shapes
 
-    def psi(self, modal_indx, x):
+    def psi_plate(self, modal_indx, x):
         return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))

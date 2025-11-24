@@ -1,16 +1,9 @@
 #Ties all processes together
 
-from calculateMatrix import construct_matrix
+#from calculateMatrix import construct_matrix
 from solver import sym_transform
-from calculateMatrix import construct_matrix_med
 from solver import asym_solve
-from calculateMatrix import construct_matrix_maybefast
-
-from calculateMatrix import construct_matrix_faster
 from calculateMatrix import construct_matrix_maybefast_tiny
-from calculateMatrix import construct_matrix_maybefast_tiny2
-from calculateMatrix import construct_matrix_faster2
-from calculateMatrix import construct_matrix_faster3
 from solver import rayleigh_solve
 from lambda_finder import calc_lambda
 from lambda_finder import calc_qbar_plate
@@ -27,14 +20,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
-
-# beam1 = Beam(1, 70E9, 2700, 0.1, 0.1, 'PP', 10)
-# plate1 = Plate(1, 2, 70E9, 2700, 0.1, .33, 'PPPP', 10, 10)
-
-beam1 = Beam(np.sqrt(2), 0.001 * 70e9, 2700, 0.01, 0.01, "PP", 15)
-plate1 = Plate(
-    np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "PPPP", 15, 15
-)
+beam1 = Beam(np.sqrt(2), 0.001 * 70e9, 2700, 0.01, 0.01, "CC", 15)
+plate1 = Plate(np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "CCCC", 15, 15)
 
 print("SYSTEM NUMBER", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
 print("AR", plate1.y_length / plate1.x_length)
@@ -65,7 +52,7 @@ dim = len(constraints)
 
 
 roots = rayleigh_solve(
-    beam1, plate1, constraints, 300, 1e-9, 50, 1e-13, transform=True
+    beam1, plate1, constraints, 3000000, 1e-9, 50, 1e-13, transform=True
 )
 print("ROOTS ARE", roots)
 
@@ -94,9 +81,10 @@ flag = True
 print("SYSTEM INTERUPT")
 print("[0] Find a root")
 print("[1] Zoom In")
+print("[X} Quit]")
 while flag == True:
     raw = input("Select a number")
-    if raw == "Q":
+    if raw == "X":
         flag = False
     elif int(raw) == 0:
         lower = float(input("Lower"))

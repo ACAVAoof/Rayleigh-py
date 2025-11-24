@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import brentq
 
 """Solving for betaL roots based on clamped-clamped beam vibration"""
-n_betaL_roots = 10
+n_betaL_roots = 20
 f = lambda x: np.cosh(x)*np.cos(x) - 1.0
 
 xs = np.linspace(0.0, 100.0, 200_001)
