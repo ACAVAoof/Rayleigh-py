@@ -16,9 +16,9 @@ class Beam:
         self,
         length: float,
         e_modulus: float,
+        density: float,
         thickness: float,
         width: float,
-        density: float,
         boundary_condition: str,
         modal_indx: int,
     ):
@@ -102,18 +102,26 @@ class Beam:
     def freqs_sq_mass(self) -> np.ndarray:
         """🐍Calculate the square of the frequencies multiplied by the
         generalized mass. Units of kg * rad^2/sec^2."""
-        return self.freqs_sq * self.gen_mass
+        return self.freqs_sq * self.gen_mass_vector_beam    
 
     @cached_property
     def freq_prefactor(self) -> float:
         """🐍Calculate the frequency prefactor for the beam.
         Units of s^-1 * m^(-1/2)."""
-        return (np.sqrt(self.e_modulus * self.area_moment / self.gen_mass)
+        return (
+            np.sqrt(self.e_modulus * self.area_moment / self.mass_per_unit_length)
             * np.pi**2
-            / self.length**2)
+            / self.length**2
+        )
     
     def psi_beam(self, modal_indx, x):
-        return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))
+        xi = x / self.length
+        i = modal_indx - 1
+        k = betaL_roots[i]
+
+        sigma = (np.cosh(k) - np.cos(k)) / (np.sinh(k) - np.sin(k))
+        z = k * xi
+        return (np.cosh(z) - np.cos(z) - sigma * (np.sinh(z) - np.sin(z)))
                 
     def shape(self, modal_indx, x) -> float:
         """🐍Calculate the shape function for the beam at a given position.
@@ -148,13 +156,13 @@ class Beam:
             )
         
         elif self.boundary_condition == "CC":
+            i = modal_indx - 1
+            k = betaL_roots[i]
             return (
                 np.sqrt(
-                    self.e_modulus
-                    * self.area_moment
-                    / self.mass_per_unit_length
+                    self.e_modulus * self.area_moment / self.mass_per_unit_length
                 )
-                * ( (betaL_roots[modal_indx] ** 2) / (self.length ** 2) )
+                * (k / self.length) ** 2
             )
 
     def constraint_shapes(self, constraints: np.ndarray) -> np.ndarray:
@@ -310,7 +318,7 @@ class Plate:
     def freqs_sq_mass(self):
         """Calculate the square of the frequencies multiplied by the
         generalized mass."""
-        return self.freqs_sq * self.gen_mass
+        return self.freqs_sq * self.gen_mass_vector_plate
 
     def shape(self, rx, ry, x, y):
         """Calculate the shape function for the plate at a given position.
@@ -328,11 +336,16 @@ class Plate:
                 ry * np.pi * y / self.y_length
             )
         elif self.boundary_condition == "CCCC":
-            grid = np.linspace(0, self.x_length, 4001)
-            A = np.max(np.abs(self.psi_plate(rx, grid)))
-            grid = np.linspace(0, self.y_length, 4001)
-            B = np.max(np.abs(self.psi_plate(ry, grid)))
-            return ( (self.psi_plate(rx, x) / A) * ((self.psi_plate(ry, y) / B)) )
+            grid_x = np.linspace(0, self.x_length, 4001)
+            A = np.max(np.abs(self.psi_plate(rx, grid_x)))
+            grid_y = np.linspace(0, self.y_length, 4001)
+            B = np.max(np.abs(self.psi_plate(ry, grid_y)))
+            
+            xi_x = x / self.x_length
+            xi_y = y / self.y_length
+            sx = self.psi_plate(rx, xi_x) / A
+            sy = self.psi_plate(ry, xi_y) / B
+            return sx * sy
 
     def freq(self, rx, ry):
         """Calculate the frequency of the plate for given modal indices. Units of rad/sec."""
@@ -362,4 +375,9 @@ class Plate:
         return shapes
 
     def psi_plate(self, modal_indx, x):
-        return (np.cosh(betaL_roots[modal_indx] * x) - np.cos(betaL_roots[modal_indx] * x)) - ((np.cosh(betaL_roots[modal_indx]) - np.cos(betaL_roots[modal_indx]))/(np.sinh(betaL_roots[modal_indx])-np.sin(betaL_roots[modal_indx]))) * (np.sinh(betaL_roots[modal_indx] * x) - np.sin(betaL_roots[modal_indx] * x))
+        i = modal_indx - 1
+        k = betaL_roots[i]
+
+        sigma = (np.cosh(k) - np.cos(k)) / (np.sinh(k) - np.sin(k))
+        z = k * x
+        return np.cosh(z) - np.cos(z) - sigma * (np.sinh(z) - np.sin(z))

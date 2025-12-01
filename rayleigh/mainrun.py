@@ -17,8 +17,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
-beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.01, 0.01, "PP", 15)
-plate1 = Plate(np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "PPPP", 15, 15)
+beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.01, 0.01, "CC", 5)
+plate1 = Plate(np.sqrt(2), 2 * np.sqrt(2), 70e9, 2700, 0.01, 0.33, "CCCC", 5, 5)
 
 print("SYSTEM NUMBER", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
 print("AR", plate1.y_length / plate1.x_length)
@@ -41,9 +41,9 @@ plate1.constraint_shape_matrix = plate1.constraint_shapes(constraints)
 dim = len(constraints)
 
 roots = rayleigh_solve(
-    beam1, plate1, constraints, 1000, 1e-9, 50, 1e-13, transform=True
+    beam1, plate1, constraints, 20000, 1e-9, 50, 1e-13, transform=True
 )
-print("ROOTS ARE", roots)
+print("ROOTS ARE: ", roots)
 
 freq_range = np.linspace(0, 800, 7000)
 dets = np.zeros((len(freq_range)))
@@ -69,7 +69,7 @@ print("[0] Find a root")
 print("[1] Zoom In")
 print("[X} Quit]")
 while flag == True:
-    raw = input("Select a number")
+    raw = input("Select a number: ")
     if raw == "X":
         flag = False
     elif int(raw) == 0:
