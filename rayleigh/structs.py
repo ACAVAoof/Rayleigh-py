@@ -355,13 +355,24 @@ class Plate:
                 + (ry * np.pi / self.y_length) ** 2
             )
         elif self.boundary_condition == "CCCC":
-            D = ((self.e_modulus * self.thickness) / (12 * (1 - self.poisson_ratio**2)))
+            D = (self.e_modulus * self.thickness**3) / (12 * (1 - self.poisson_ratio**2))
             G = 1.506
             H = 1.248
             J = 1.248
             aspect_ratio = self.x_length / self.y_length
-            C = ((np.pi**4) * D) / ((self.x_length**4) * self.mass_per_unit_area)
-            return (C * (G**4 + (G**4)*(aspect_ratio**4) + 2*(aspect_ratio**2)*(self.poisson_ratio * H * J + (1 - self.poisson_ratio) * H * J)))**0.5
+
+            C = (np.pi**4 * D) / (self.x_length**4 * self.mass_per_unit_area)
+
+            return (
+                C * (
+                    G**4
+                    + G**4 * aspect_ratio**4
+                    + 2 * aspect_ratio**2 * (
+                        self.poisson_ratio * H * J
+                        + (1 - self.poisson_ratio) * H * J
+                    )
+                )
+            )**0.5
 
     def constraint_shapes(self, constraints):
         shapes = np.zeros(
