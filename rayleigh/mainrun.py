@@ -63,7 +63,9 @@ for indx, freq in enumerate(freq_range):
         dets[indx] = np.linalg.det(A)
 
 plt.plot(freq_range, dets)
-
+plt.xlabel("Frequency (rad/s)")
+plt.ylabel("Transformed Determinant sym(det(A(ω)))")
+plt.title("Rayleigh–Ritz Determinant vs Frequency")
 plt.show()
 
 flag = True
@@ -74,7 +76,7 @@ print("[X} Quit]")
 while flag == True:
     raw = input("Select a number: ")
     if raw == "X":
-        flag = False
+        quit()
     elif int(raw) == 0:
         lower = float(input("Lower"))
         upper = float(input("Upper"))
