@@ -355,17 +355,23 @@ class Plate:
                 + (ry * np.pi / self.y_length) ** 2
             )
         elif self.boundary_condition == "CCCC":
-            if rx == 1 and ry == 1:
-                Gx = Gy = 1.506
-                Hx = Hy = 1.248
-                Jx = Jy = 1.248
+            if rx == 1:
+                Gx = 1.506
+                Hx = 1.248
+                Jx = 1.248
             else:
                 Gx = rx - 0.5
+                Hx = (rx - 0.5)**2 * (1 - 2 / ((rx - 0.5) * np.pi))
+                Jx = (rx - 0.5)**2 * (1 - 2 / ((rx - 0.5) * np.pi))
+
+            if ry == 1:
+                Gy = 1.506
+                Hy = 1.248
+                Jy = 1.248
+            else:
                 Gy = ry - 0.5
-                Hx = ((rx - 0.5)**2) * (1 - (2 / ((rx - 0.5) * np.pi)))
-                Hy = ((ry - 0.5)**2) * (1 - (2 / ((ry - 0.5) * np.pi)))
-                Jx = ((rx - 0.5)**2) * (1 - (2 / ((rx - 0.5) * np.pi)))
-                Jy = ((ry - 0.5)**2) * (1 - (2 / ((ry - 0.5) * np.pi)))
+                Hy = (ry - 0.5)**2 * (1 - 2 / ((ry - 0.5) * np.pi))
+                Jy = (ry - 0.5)**2 * (1 - 2 / ((ry - 0.5) * np.pi))
 
             D = (self.e_modulus * self.thickness**3) / (12 * (1 - self.poisson_ratio**2))
             aspect_ratio = self.x_length / self.y_length

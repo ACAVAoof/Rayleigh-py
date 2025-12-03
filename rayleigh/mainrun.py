@@ -30,8 +30,6 @@ print("b", plate1.y_length)
 print("BEAM FREQUENCIES: ", beam1.freqs)
 print("PLATE FREQUENCIES: ", plate1.freqs)
 
-breakpoint()
-
 constraints = [
     [np.pi / 4, np.pi / 2],
     [np.pi / 5, np.pi / 2],
