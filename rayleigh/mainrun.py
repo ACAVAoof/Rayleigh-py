@@ -46,6 +46,7 @@ dim = len(constraints)
 roots = rayleigh_solve(
     beam1, plate1, constraints, 1000, 1e-9, 50, 1e-13, transform=True
 )
+roots = np.array(roots, dtype=float).tolist()
 print("ROOTS ARE: ", roots)
 
 freq_range = np.linspace(0, 800, 7000)
