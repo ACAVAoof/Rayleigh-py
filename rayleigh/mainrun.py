@@ -17,21 +17,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
-beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.001, 0.01, "CC", 5)
+beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.05, 0.005, "CC", 5)
 plate1 = Plate(np.sqrt(2), np.sqrt(2) / 2, 70e9, 2700, 0.001, 0.33, "CCCC", 5, 5)
 
-print("SYSTEM NUMBER", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
+print(" ")
+print("System Number", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
 print("AR", plate1.y_length / plate1.x_length)
 print("MS", 2 * beam1.mass_per_unit_length / (plate1.mass_per_unit_area * plate1.y_length))
 print("DP", plate1.flexural_rigidity)
 print("m_p", plate1.mass_per_unit_area)
 print("b", plate1.y_length)
+print(" ")
 
-print("BEAM FREQUENCIES: ", beam1.freqs)
-#print("PLATE FREQUENCIES: ", plate1.freqs)
-for rx in range(plate1.x_indx):
-    for ry in range(plate1.y_indx):
-        print(f"rx={rx+1}, ry={ry+1}  --->  ω = {plate1.freqs[rx, ry]} rad/sec")
+print(f"Beam Inputs: L = {beam1.length} m, w = {beam1.width} m, t = {beam1.thickness} m, E = {beam1.e_modulus} Pa, ρ = {beam1.density} kg/m³, Boundary Conditions = {beam1.boundary_condition}")
+print(f"Plate Inputs: a = {plate1.x_length} m, b = {plate1.y_length} m, h = {plate1.thickness} m, E = {plate1.e_modulus} Pa, ρ = {plate1.density} kg/m³, ν = {plate1.poisson_ratio}, Boundary Conditions = {plate1.boundary_condition}")
+print(" ")
+
+print("Beam Frequencies: ")
+print(beam1.freqs)
+print(" ")
+print("Plate Frequencies: ")
+print(plate1.freqs)
+print(" ")
 
 constraints = [
     [0.5 / np.pi, 1.5 / np.pi],
@@ -50,7 +57,9 @@ roots = rayleigh_solve(
     beam1, plate1, constraints, 1000, 1e-9, 50, 1e-13, transform=True
 )
 roots = np.array(roots, dtype=float).tolist()
-print("ROOTS ARE: ", roots)
+print("Roots: ")
+print(roots)
+print(" ")
 
 freq_range = np.linspace(0, 800, 7000)
 dets = np.zeros((len(freq_range)))
