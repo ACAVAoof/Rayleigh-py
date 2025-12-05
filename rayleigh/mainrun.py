@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import cProfile
 
 beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.001, 0.01, "CC", 5)
-plate1 = Plate(np.sqrt(2), np.sqrt(2) / 2, 70e9, 2700, 0.01, 0.33, "CCCC", 5, 5)
+plate1 = Plate(np.sqrt(2), np.sqrt(2) / 2, 70e9, 2700, 0.001, 0.33, "CCCC", 5, 5)
 
 print("SYSTEM NUMBER", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
 print("AR", plate1.y_length / plate1.x_length)
@@ -28,14 +28,17 @@ print("m_p", plate1.mass_per_unit_area)
 print("b", plate1.y_length)
 
 print("BEAM FREQUENCIES: ", beam1.freqs)
-print("PLATE FREQUENCIES: ", plate1.freqs)
+#print("PLATE FREQUENCIES: ", plate1.freqs)
+for rx in range(plate1.x_indx):
+    for ry in range(plate1.y_indx):
+        print(f"rx={rx+1}, ry={ry+1}  --->  ω = {plate1.freqs[rx, ry]} rad/sec")
 
 constraints = [
-    [np.pi / 4, np.pi / 2],
-    [np.pi / 5, np.pi / 2],
-    [2 * np.pi / 5, np.pi / 2],
-    [np.pi / 3, np.pi / 2],
-    [np.pi / 6, np.pi / 2],
+    [0.5 / np.pi, 1.5 / np.pi],
+    [1.0 / np.pi, 1.5 / np.pi],
+    [1.5 / np.pi, 1.5 / np.pi],
+    [2.0 / np.pi, 1.5 / np.pi],
+    [2.0 / np.pi, 1.5 / np.pi],
 ]
 
 plate1.constraint_eval = plate1.constraint_shapes(constraints)

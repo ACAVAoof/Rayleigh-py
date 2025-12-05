@@ -360,18 +360,18 @@ class Plate:
                 Hx = 1.248
                 Jx = 1.248
             else:
-                Gx = rx - 0.5
-                Hx = (rx - 0.5)**2 * (1 - 2 / ((rx - 0.5) * np.pi))
-                Jx = (rx - 0.5)**2 * (1 - 2 / ((rx - 0.5) * np.pi))
+                Gx = (rx + 1) - 0.5
+                Hx = ((rx + 1) - 0.5)**2 * (1 - 2 / (((rx + 1) - 0.5) * np.pi))
+                Jx = ((rx + 1) - 0.5)**2 * (1 - 2 / (((rx + 1) - 0.5) * np.pi))
 
             if ry == 1:
                 Gy = 1.506
                 Hy = 1.248
                 Jy = 1.248
             else:
-                Gy = ry - 0.5
-                Hy = (ry - 0.5)**2 * (1 - 2 / ((ry - 0.5) * np.pi))
-                Jy = (ry - 0.5)**2 * (1 - 2 / ((ry - 0.5) * np.pi))
+                Gy = (ry + 1) - 0.5
+                Hy = ((ry + 1) - 0.5)**2 * (1 - 2 / (((ry + 1) - 0.5) * np.pi))
+                Jy = ((ry + 1) - 0.5)**2 * (1 - 2 / (((ry + 1) - 0.5) * np.pi))
 
             D = (self.e_modulus * self.thickness**3) / (12 * (1 - self.poisson_ratio**2))
             aspect_ratio = self.x_length / self.y_length
