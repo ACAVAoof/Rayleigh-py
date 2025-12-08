@@ -41,11 +41,11 @@ print(plate1.freqs)
 print(" ")
 
 constraints = [
-    [0.5 / np.pi, 1.5 / np.pi],
-    [1.0 / np.pi, 1.5 / np.pi],
     [1.5 / np.pi, 1.5 / np.pi],
-    [2.0 / np.pi, 1.5 / np.pi],
-    [2.0 / np.pi, 1.5 / np.pi],
+    # [1.0 / np.pi, 1.5 / np.pi],
+    # [1.5 / np.pi, 1.5 / np.pi],
+    # [2.0 / np.pi, 1.5 / np.pi],
+    # [2.0 / np.pi, 1.5 / np.pi],
 ]
 
 plate1.constraint_eval = plate1.constraint_shapes(constraints)
@@ -68,9 +68,9 @@ trans = True
 
 for indx, freq in enumerate(freq_range):
     A = construct_matrix_maybefast_tiny(freq, dim, beam1, plate1)
-    C = 10 ** (-26)
+    # C = 10 ** -26
+    C = 10e-5
     if trans == True:
-
         dets[indx] = sym_transform(np.linalg.det(A), C)
     else:
         dets[indx] = np.linalg.det(A)
@@ -78,17 +78,17 @@ for indx, freq in enumerate(freq_range):
 plt.plot(freq_range, dets)
 plt.xlabel("Frequency (rad/s)")
 plt.ylabel("Transformed Determinant sym(det(A(ω)))")
-plt.title("Rayleigh–Ritz Determinant vs Frequency")
+plt.title("Auto-Scaled Rayleigh–Ritz Determinant vs Frequency")
 plt.show()
 
 flag = True
 print("SYSTEM INTERUPT")
 print("[0] Find a root")
 print("[1] Zoom In")
-print("[X} Quit]")
+print("[x} Quit]")
 while flag == True:
     raw = input("Select a number: ")
-    if raw == "X":
+    if raw == "x":
         quit()
     elif int(raw) == 0:
         lower = float(input("Lower"))

@@ -215,10 +215,5 @@ def pad(freqs, eps):
     return mod_freq
 
 
-# def sym_transform(arg, C):
-#      return np.sign(arg) * (np.log10(1 + abs(arg / C)))
-
 def sym_transform(arg, C):
-    C_safe = max(abs(C), 1e-20)
-    return np.sign(arg) * np.log1p(abs(arg) / C_safe)
-
+     return np.sign(arg) * (np.log10(1 + abs(arg / C)))
