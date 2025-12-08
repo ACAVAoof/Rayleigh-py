@@ -68,8 +68,7 @@ trans = True
 
 for indx, freq in enumerate(freq_range):
     A = construct_matrix_maybefast_tiny(freq, dim, beam1, plate1)
-    # C = 10 ** -26
-    C = 10e-5
+    C = 10e-5 #Change this value based on the amplitude of the plot when transform is off, originally C = 10e-26, now C = 10e-5
     if trans == True:
         dets[indx] = sym_transform(np.linalg.det(A), C)
     else:
@@ -78,7 +77,8 @@ for indx, freq in enumerate(freq_range):
 plt.plot(freq_range, dets)
 plt.xlabel("Frequency (rad/s)")
 plt.ylabel("Transformed Determinant sym(det(A(ω)))")
-plt.title("Auto-Scaled Rayleigh–Ritz Determinant vs Frequency")
+plt.title("Rayleigh–Ritz Determinant vs Frequency")
+plt.axhline(0, color='red')
 plt.show()
 
 flag = True
