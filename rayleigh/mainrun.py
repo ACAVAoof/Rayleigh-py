@@ -17,10 +17,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cProfile
 
-beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.05, 0.005, "CC", 5)
+beam1 = Beam(np.sqrt(2), 70e9, 2700, 0.3, 0.005, "CC", 5)
 plate1 = Plate(np.sqrt(2), np.sqrt(2) / 2, 70e9, 2700, 0.001, 0.33, "CCCC", 5, 5)
 
-print(" ")
+print("System Characteristics: ")
 print("System Number", beam1.e_modulus * beam1.area_moment / beam1.mass_per_unit_length * plate1.mass_per_unit_area / plate1.flexural_rigidity)
 print("AR", plate1.y_length / plate1.x_length)
 print("MS", 2 * beam1.mass_per_unit_length / (plate1.mass_per_unit_area * plate1.y_length))
@@ -47,6 +47,9 @@ constraints = [
     # [2.0 / np.pi, 1.5 / np.pi],
     # [2.0 / np.pi, 1.5 / np.pi],
 ]
+print("Constraints: ")
+print(constraints)
+print(" ")
 
 plate1.constraint_eval = plate1.constraint_shapes(constraints)
 beam1.constraint_eval = beam1.constraint_shapes(constraints)
